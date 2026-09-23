@@ -8,6 +8,10 @@ position. Results can be viewed in the window or delivered to Telegram and email
 Everything runs on your own computer: the vacancies, the CV and the scores go
 nowhere except the model itself.
 
+**Download:** [latest release](https://github.com/mrWD/ai-job-search/releases/latest)
+for macOS, Windows and Linux ·
+**Product page:** [mrwd.github.io/products/ai-job-search](https://mrwd.github.io/products/ai-job-search/)
+
 <!-- The screenshots come in pairs: GitHub shows whichever suits the reader's theme.
      The data in them is invented — no real people, companies or vacancies. -->
 <picture>
@@ -88,6 +92,32 @@ page, and "Check again" finds it without a restart.
    will see.
 6. **Coverage** — what exactly was looked at, and whether the program can see a
    particular company.
+
+## How it works inside
+
+A run has two halves: collecting and scoring.
+
+Collecting needs no model. The `collectors` package reads company career pages
+(`crawler.py`), the ATS platforms with documented APIs such as Greenhouse and
+Lever (`ats.py`), and job aggregators (`aggregators.py`). `pipeline.py` runs
+them in order for one profile and writes everything into SQLite (`db.py`).
+
+Scoring happens in three stages, each more expensive than the one before, so
+the model only reads what deserves it (`scoring.py`):
+
+1. A cheap word-level sift against the roles and skills taken from the CV.
+   No model involved.
+2. Triage in batches: the model gives every survivor a verdict, whether it is
+   the candidate's own profession, an adjacent one or a foreign one, and a
+   match score. The verdict comes before the number on purpose: a score named
+   first tends to get a reason fitted to it afterwards.
+3. Deep analysis of the top: the CV and LinkedIn edits, the salary range, facts
+   about the company, and how to open the application.
+
+The model itself is behind `providers.py` and `llm.py`: Claude Code, Cursor,
+Codex, Copilot, Goose, Qwen, Ollama or any OpenAI-compatible endpoint, with one
+interface for the rest of the program. `providers.py` also finds which CLIs are
+installed and whether there is enough memory for a local model.
 
 ## Scheduling
 
